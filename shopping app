@@ -1,0 +1,196 @@
+import React, { useReducer } from "react";
+
+const vegetables = [
+  { id: 1, name: "🍅Tomato", price: 20 },
+  { id: 2, name: "🥔Potato", price: 30 },
+  { id: 3, name: "🧅Onion", price: 40 },
+  { id: 4, name: "🥕Carrot", price: 50 },
+  { id: 5, name: "🫘Beans", price: 60 },
+];
+
+const initialState = {
+  cart: [],
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "ADD_TO_CART":
+      const existingItem = state.cart.find(
+        (item) => item.id === action.payload.id
+      );
+
+      if (existingItem) {
+        return {
+          ...state,
+          cart: state.cart.map((item) =>
+            item.id === action.payload.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          ),
+        };
+      }
+
+      return {
+        ...state,
+        cart: [...state.cart, { ...action.payload, quantity: 1 }],
+      };
+
+    case "INCREMENT":
+      return {
+        ...state,
+        cart: state.cart.map((item) =>
+          item.id === action.payload
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        ),
+      };
+
+    case "DECREMENT":
+      return {
+        ...state,
+        cart: state.cart.map((item) =>
+          item.id === action.payload
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        ).filter((item) => item.quantity > 0),
+      };
+
+    case "REMOVE":
+      return {
+        ...state,
+        cart: state.cart.filter((item) => item.id !== action.payload),
+      };
+
+    case "CLEAR_CART":
+      return {
+        ...state,
+        cart: [],
+      };
+
+    default:
+      return state;
+  }
+}
+
+export default function App() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const totalPrice = state.cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const totalItems = state.cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+
+  return (
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1>🥕 Vegetable Shopping App</h1>
+
+      <h2>Available Vegetables</h2>
+
+      {vegetables.map((veg) => (
+        <div
+          key={veg.id}
+          style={{
+            border: "1px solid gray",
+            padding: "10px",
+            margin: "10px 0",
+          }}
+        >
+          <h3>{veg.name}</h3>
+          <p>₹{veg.price} / kg</p>
+
+          <button
+            onClick={() =>
+              dispatch({
+                type: "ADD_TO_CART",
+                payload: veg,
+              })
+            }
+          >
+            Add To Cart
+          </button>
+        </div>
+      ))}
+
+      <hr />
+
+      <h2>🛒 Cart</h2>
+
+      {state.cart.length === 0 ? (
+        <p>Cart is Empty</p>
+      ) : (
+        <>
+          {state.cart.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                border: "1px solid black",
+                margin: "10px 0",
+                padding: "10px",
+              }}
+            >
+              <h3>{item.name}</h3>
+
+              <p>Price: ₹{item.price}</p>
+
+              <p>Quantity: {item.quantity}</p>
+
+              <p>Total: ₹{item.price * item.quantity}</p>
+
+              <button
+                onClick={() =>
+                  dispatch({
+                    type: "INCREMENT",
+                    payload: item.id,
+                  })
+                }
+              >
+                +
+              </button>
+
+              <button
+                onClick={() =>
+                  dispatch({
+                    type: "DECREMENT",
+                    payload: item.id,
+                  })
+                }
+              >
+                -
+              </button>
+
+              <button
+                onClick={() =>
+                  dispatch({
+                    type: "REMOVE",
+                    payload: item.id,
+                  })
+                }
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+
+          <h3>Total Items: {totalItems}</h3>
+
+          <h3>Total Price: ₹{totalPrice}</h3>
+
+          <button
+            onClick={() =>
+              dispatch({
+                type: "CLEAR_CART",
+              })
+            }
+          >
+            Clear Cart
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
